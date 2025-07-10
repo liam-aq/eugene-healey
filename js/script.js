@@ -49,10 +49,11 @@ fetch(`https://docs.google.com/spreadsheets/d/${SHEET_ID}/gviz/tq?sheet=${SHEET_
 // Shake handler attachment
 function addShakeListener() {
   window.addEventListener('devicemotion', e => {
-    console.log('devicemotion event fired', e.accelerationIncludingGravity);
-    const ag = e.accelerationIncludingGravity;
-    if (!ag) return;
-    const mag = Math.hypot(ag.x, ag.y, ag.z);
+    // prefer acceleration without gravity (true shake), fallback otherwise
+    const a = e.acceleration || e.accelerationIncludingGravity;
+    if (!a) return;
+    // compute magnitude of acceleration change
+    const mag = Math.hypot(a.x || 0, a.y || 0, a.z || 0);
     const now = Date.now();
     if (mag > SHAKE_THRESHOLD && now - lastShakeTime > SHAKE_COOLDOWN) {
       lastShakeTime = now;
