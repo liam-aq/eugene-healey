@@ -1,7 +1,11 @@
 // js/script.js
 
 // Constants
-const NUM_LETTERS = 600;
+// Base letter count with mobile override
+const BASE_NUM_LETTERS = 600;
+const NUM_LETTERS = window.innerWidth < 768
+  ? Math.floor(BASE_NUM_LETTERS / 2)  // half on narrow screens
+  : BASE_NUM_LETTERS;
 const EXPAND_DUR = 2000;    // ms expand
 const CONTRACT_DUR = 1000;  // ms contract (slowed to 1s)
 const MAX_RADIUS_RATIO = 0.3;
@@ -271,3 +275,19 @@ window.addEventListener('touchmove', e => {
 // Clear on mouseout / touchend
 window.addEventListener('mouseleave', () => { cursorX = cursorY = null; });
 window.addEventListener('touchend', () => { cursorX = cursorY = null; });
+
+// ---- Device shake detection ----
+let lastShakeTime = 0;
+const SHAKE_THRESHOLD = 15;    // adjust sensitivity
+const SHAKE_COOLDOWN  = 1000;  // ms between shakes
+
+window.addEventListener('devicemotion', e => {
+  const ag = e.accelerationIncludingGravity;
+  if (!ag) return;
+  const mag = Math.hypot(ag.x, ag.y, ag.z);
+  const now = Date.now();
+  if (mag > SHAKE_THRESHOLD && now - lastShakeTime > SHAKE_COOLDOWN) {
+    lastShakeTime = now;
+    triggerClear();
+  }
+});
