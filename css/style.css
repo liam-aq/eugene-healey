@@ -92,3 +92,24 @@ html, body {
   display: inline-block;
   width: 3em;   /* ↑ increased space between words */
 }
+
+/* Mobile-only adjustments for quote layout */
+@media (max-width: 768px) {
+  /* Tighter line spacing */
+  #message-container {
+    line-height: 1.2em;
+    padding: 1rem;   /* optional: reduce padding */
+  }
+
+  /* Reduce spacing between letters */
+  #message-container .letter {
+    margin: 0 0.2rem;
+    width: 20px;
+    height: 20px;
+  }
+
+  /* Optional: reduce word margin if needed */
+  #message-container .word {
+    margin: 0 0.5rem;
+  }
+}
