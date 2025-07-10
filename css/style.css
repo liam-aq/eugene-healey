@@ -1,0 +1,94 @@
+html, body {
+  margin: 0;
+  padding: 0;
+  width: 100%;
+  height: 100%;
+  overflow: hidden;
+  background: black;
+}
+
+#soup-container {
+  position: relative;
+  width: 100%;
+  height: 100%;
+}
+
+.letter {
+  position: absolute;
+  width: 24px;
+  height: 24px;
+  pointer-events: none;
+  user-select: none;
+  will-change: transform;
+}
+
+/* Invisible circular repeller */
+#clear-zone {
+  position: absolute;
+  top: 50%;
+  left: 50%;
+  transform: translate(-50%, -50%);
+  width: 0;
+  height: 0;
+  border-radius: 50%;
+  pointer-events: none;
+  z-index: 2;
+  /* no border or background */
+}
+
+/* Unified Message pop-up styling */
+#message-container {
+  position: absolute;
+  top: 50%;
+  left: 50%;
+  transform: translate(-50%, -50%);
+  pointer-events: none;
+  z-index: 5;
+  color: white;
+  font-family: 'Frankfurter', sans-serif;
+  font-size: 2rem;
+  text-align: center;
+  line-height: 1.5em;      /* increased line spacing for quotes */
+  padding: 4rem;           /* space around text */
+  box-sizing: border-box;
+  overflow: hidden;
+  opacity: 0;
+  gap: 2rem;
+  transition: opacity 2s ease-out; /* fade-in */
+  max-width: 90vw;
+  /* Allow wrapping only at spaces */
+  white-space: pre-wrap;
+  word-break: normal;
+}
+
+#message-container.visible {
+  opacity: 1;
+}
+
+#message-container.hidden {
+  opacity: 0;
+  transition: opacity 0.5s ease-in; /* fade-out */
+}
+
+/* Ensure image-letters get a small consistent margin */
+#message-container .letter {
+  /* Override absolute positioning for message letters */
+  position: static !important;
+  display: inline-block;
+  width: 24px;
+  height: 24px;
+  margin: 0 0.5rem;   /* ↑ 0.5rem space on each side of a letter */
+  vertical-align: middle;
+}
+
+#message-container .word {
+  display: inline-block;
+  /* keep letters together */
+  white-space: nowrap;
+  margin: 0 1rem; /* ↑ 1rem space on each side of a word */
+}
+
+#message-container .word-space {
+  display: inline-block;
+  width: 3em;   /* ↑ increased space between words */
+}
