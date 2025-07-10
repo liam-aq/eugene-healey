@@ -10,7 +10,7 @@ const EXPAND_DUR = 2000;    // ms expand
 const CONTRACT_DUR = 1000;  // ms contract (slowed to 1s)
 // Clear-zone ratio: larger on mobile for bigger blank space
 const MAX_RADIUS_RATIO = window.innerWidth < 768 
-  ? 0.6   // 50% of viewport on mobile
+  ? 0.45   // 50% of viewport on mobile
   : 0.3;  // 30% on desktop
 
 // Smooth drift/wobble constants
