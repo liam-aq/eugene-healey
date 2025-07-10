@@ -112,4 +112,10 @@ html, body {
   #message-container .word {
     margin: 0 0.5rem;
   }
+
+  /* Also shrink ambient soup letters to match quote letters */
+  .letter {
+    width: 20px;
+    height: 20px;
+  }
 }
