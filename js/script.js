@@ -46,6 +46,27 @@ fetch(`https://docs.google.com/spreadsheets/d/${SHEET_ID}/gviz/tq?sheet=${SHEET_
   })
   .catch(err => console.error("Failed to load quotes:", err));
 
+// --- Motion permission helper (for iOS/Android) ---
+async function enableMotion() {
+  if (typeof DeviceMotionEvent?.requestPermission === 'function') {
+    try {
+      const state = await DeviceMotionEvent.requestPermission();
+      console.log('Motion permission:', state);
+    } catch (e) {
+      console.error('Motion permission error', e);
+    }
+  }
+}
+
+let motionEnabled = false;
+// Prompt for permission on first touch
+window.addEventListener('touchstart', async () => {
+  if (!motionEnabled) {
+    await enableMotion();
+    motionEnabled = true;
+  }
+}, { once: true });
+
 // Helpers
 function lerp(a, b, t) { return a + (b - a) * t; }
 function easeOut6(t) { return 1 - Math.pow(1 - t, 6); }
@@ -282,6 +303,7 @@ const SHAKE_THRESHOLD = 15;    // adjust sensitivity
 const SHAKE_COOLDOWN  = 1000;  // ms between shakes
 
 window.addEventListener('devicemotion', e => {
+  console.log('devicemotion event:', e.accelerationIncludingGravity);
   const ag = e.accelerationIncludingGravity;
   if (!ag) return;
   const mag = Math.hypot(ag.x, ag.y, ag.z);
