@@ -3,7 +3,7 @@
 // Constants
 // Base letter count with mobile override
 const BASE_NUM_LETTERS = 600;
-const NUM_LETTERS = window.innerWidth < 768
+const NUM_LETTERS = window.innerWidth < 1024
   ? Math.floor(BASE_NUM_LETTERS / 2)  // half on narrow screens
   : BASE_NUM_LETTERS;
 const EXPAND_DUR = 2000;    // ms expand
@@ -46,12 +46,30 @@ fetch(`https://docs.google.com/spreadsheets/d/${SHEET_ID}/gviz/tq?sheet=${SHEET_
   })
   .catch(err => console.error("Failed to load quotes:", err));
 
+// Shake handler attachment
+function addShakeListener() {
+  window.addEventListener('devicemotion', e => {
+    console.log('devicemotion event:', e.accelerationIncludingGravity);
+    const ag = e.accelerationIncludingGravity;
+    if (!ag) return;
+    const mag = Math.hypot(ag.x, ag.y, ag.z);
+    const now = Date.now();
+    if (mag > SHAKE_THRESHOLD && now - lastShakeTime > SHAKE_COOLDOWN) {
+      lastShakeTime = now;
+      triggerClear();
+    }
+  });
+}
+
 // --- Motion permission helper (for iOS/Android) ---
 async function enableMotion() {
   if (typeof DeviceMotionEvent?.requestPermission === 'function') {
     try {
       const state = await DeviceMotionEvent.requestPermission();
       console.log('Motion permission:', state);
+      if (state === 'granted') {
+        addShakeListener();
+      }
     } catch (e) {
       console.error('Motion permission error', e);
     }
@@ -66,6 +84,11 @@ window.addEventListener('touchstart', async () => {
     motionEnabled = true;
   }
 }, { once: true });
+
+// On platforms without motion-permission API (e.g. Android Chrome), attach immediately
+if (typeof DeviceMotionEvent?.requestPermission !== 'function') {
+  addShakeListener();
+}
 
 // Helpers
 function lerp(a, b, t) { return a + (b - a) * t; }
@@ -301,15 +324,3 @@ window.addEventListener('touchend', () => { cursorX = cursorY = null; });
 let lastShakeTime = 0;
 const SHAKE_THRESHOLD = 15;    // adjust sensitivity
 const SHAKE_COOLDOWN  = 1000;  // ms between shakes
-
-window.addEventListener('devicemotion', e => {
-  console.log('devicemotion event:', e.accelerationIncludingGravity);
-  const ag = e.accelerationIncludingGravity;
-  if (!ag) return;
-  const mag = Math.hypot(ag.x, ag.y, ag.z);
-  const now = Date.now();
-  if (mag > SHAKE_THRESHOLD && now - lastShakeTime > SHAKE_COOLDOWN) {
-    lastShakeTime = now;
-    triggerClear();
-  }
-});
