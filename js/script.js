@@ -48,17 +48,23 @@ fetch(`https://docs.google.com/spreadsheets/d/${SHEET_ID}/gviz/tq?sheet=${SHEET_
 
 // Shake handler attachment
 function addShakeListener() {
+  let lastAcc = { x: 0, y: 0, z: 0 };
   window.addEventListener('devicemotion', e => {
     // prefer acceleration without gravity (true shake), fallback otherwise
     const a = e.acceleration || e.accelerationIncludingGravity;
     if (!a) return;
-    // compute magnitude of acceleration change
-    const mag = Math.hypot(a.x || 0, a.y || 0, a.z || 0);
+    // compute change from last frame
+    const dx = (a.x || 0) - lastAcc.x;
+    const dy = (a.y || 0) - lastAcc.y;
+    const dz = (a.z || 0) - lastAcc.z;
+    const delta = Math.hypot(dx, dy, dz);
     const now = Date.now();
-    if (mag > SHAKE_THRESHOLD && now - lastShakeTime > SHAKE_COOLDOWN) {
+    if (delta > SHAKE_THRESHOLD && now - lastShakeTime > SHAKE_COOLDOWN) {
       lastShakeTime = now;
       triggerClear();
     }
+    // update lastAcc for next event
+    lastAcc = { x: a.x || 0, y: a.y || 0, z: a.z || 0 };
   });
 }
 
