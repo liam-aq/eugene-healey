@@ -49,7 +49,7 @@ fetch(`https://docs.google.com/spreadsheets/d/${SHEET_ID}/gviz/tq?sheet=${SHEET_
 // Shake handler attachment
 function addShakeListener() {
   window.addEventListener('devicemotion', e => {
-    console.log('devicemotion event:', e.accelerationIncludingGravity);
+    console.log('devicemotion event fired', e.accelerationIncludingGravity);
     const ag = e.accelerationIncludingGravity;
     if (!ag) return;
     const mag = Math.hypot(ag.x, ag.y, ag.z);
@@ -322,5 +322,5 @@ window.addEventListener('touchend', () => { cursorX = cursorY = null; });
 
 // ---- Device shake detection ----
 let lastShakeTime = 0;
-const SHAKE_THRESHOLD = 15;    // adjust sensitivity
+const SHAKE_THRESHOLD = 3;     // lower threshold for better detection
 const SHAKE_COOLDOWN  = 1000;  // ms between shakes
