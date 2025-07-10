@@ -51,8 +51,8 @@ function addShakeListener() {
   let lastAcc = { x: 0, y: 0, z: 0 };
   window.addEventListener('devicemotion', e => {
     // prefer acceleration without gravity (true shake), fallback otherwise
-    const a = e.acceleration || e.accelerationIncludingGravity;
-    if (!a) return;
+    const a = e.acceleration;
+    if (!a) return;  // only proceed if true accelerometer data is available
     // compute change from last frame
     const dx = (a.x || 0) - lastAcc.x;
     const dy = (a.y || 0) - lastAcc.y;
@@ -329,5 +329,5 @@ window.addEventListener('touchend', () => { cursorX = cursorY = null; });
 
 // ---- Device shake detection ----
 let lastShakeTime = 0;
-const SHAKE_THRESHOLD = 3;     // lower threshold for better detection
+const SHAKE_THRESHOLD = 12;    // higher threshold to prevent noise triggers
 const SHAKE_COOLDOWN  = 1000;  // ms between shakes
