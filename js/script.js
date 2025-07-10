@@ -8,7 +8,10 @@ const NUM_LETTERS = window.innerWidth < 1024
   : BASE_NUM_LETTERS;
 const EXPAND_DUR = 2000;    // ms expand
 const CONTRACT_DUR = 1000;  // ms contract (slowed to 1s)
-const MAX_RADIUS_RATIO = 0.3;
+// Clear-zone ratio: larger on mobile for bigger blank space
+const MAX_RADIUS_RATIO = window.innerWidth < 768 
+  ? 0.6   // 50% of viewport on mobile
+  : 0.3;  // 30% on desktop
 
 // Smooth drift/wobble constants
 const DRIFT_AMP = 10;      // max position offset in px
