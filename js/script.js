@@ -37,6 +37,10 @@ let cursorX = null, cursorY = null;
 const CURSOR_RADIUS = 150;       // radius of repulsion in px
 const CURSOR_STRENGTH = 0.8;     // increased repulsion strength
 
+// Click position for clear bubble
+let clickX = null;
+let clickY = null;
+
 // Fetch quotes from Google Sheets on load
 fetch(`https://docs.google.com/spreadsheets/d/${SHEET_ID}/gviz/tq?sheet=${SHEET_NAME}`)
   .then(res => res.text())
@@ -154,9 +158,17 @@ function initSoup() {
     });
   }
 
-  window.addEventListener("keydown", e => {
-    if (e.code === "Space") triggerClear();
+  // Only click/tap triggers the bubble, clamped to viewport edges
+  window.addEventListener("click", e => {
+    const r = maxClearRadius;
+    // clamp so circle stays fully on-screen
+    clickX = Math.min(Math.max(e.clientX, r), window.innerWidth  - r);
+    clickY = Math.min(Math.max(e.clientY, r), window.innerHeight - r);
+    triggerClear();
   });
+
+  // Start with message hidden
+  messageContainer.classList.add("hidden");
   animate();
 }
 
@@ -198,49 +210,55 @@ function triggerClear() {
         messageContainer.appendChild(document.createTextNode(" "));
       }
     });
-    // reset visibility classes
+    // show message immediately
+    messageContainer.classList.add("visible");
     messageContainer.classList.remove("hidden");
-    messageContainer.classList.remove("visible");
-    messageVisible = false;
+    messageVisible = true;
   }
 }
 
 // 4) Animation loop
 function animate() {
   const now = performance.now();
-  const cx = window.innerWidth / 2, cy = window.innerHeight / 2;
+  // Determine and clamp bubble center
+  const r = maxClearRadius;
+  const cxRaw = clickX != null ? clickX : window.innerWidth  / 2;
+  const cyRaw = clickY != null ? clickY : window.innerHeight / 2;
+  const cx = Math.min(Math.max(cxRaw, r), window.innerWidth  - r);
+  const cy = Math.min(Math.max(cyRaw, r), window.innerHeight - r);
 
-  // Compute clearRadius
+  // Compute clear-radius and toggle message visibility
   let clearRadius = 0;
   if (clearStart !== null) {
     const dt = now - clearStart;
     if (dt < EXPAND_DUR) {
       clearRadius = easeOut6(dt / EXPAND_DUR) * maxClearRadius;
-      // Fade in message during expansion
-      if (!messageVisible) {
-        messageContainer.style.transition = `opacity ${EXPAND_DUR}ms ease-out`;
-        messageContainer.classList.add("visible");
-        messageContainer.classList.remove("hidden");
-        messageVisible = true;
-      }
     } else if (dt < EXPAND_DUR + CONTRACT_DUR) {
       const t2 = (dt - EXPAND_DUR) / CONTRACT_DUR;
       clearRadius = easeOut6(1 - t2) * maxClearRadius;
-      // Fade out message at contraction start
-      if (messageVisible) {
-        messageContainer.style.transition = `opacity ${CONTRACT_DUR}ms ease-in`;
-        messageContainer.classList.add("hidden");
-        messageContainer.classList.remove("visible");
-        messageVisible = false;
-      }
     } else {
+      // animation complete
       clearStart = null;
+      clearRadius = 0;
     }
   }
-  // Apply CSS circle size
-  clearZone.style.width = clearZone.style.height = `${clearRadius * 2}px`;
-  // (removed per-frame messageContainer width assignment)
-  // (removed height setting so padding applies correctly)
+  // Size and position the clear-zone
+  const diameter = clearRadius * 2;
+  clearZone.style.width  = `${diameter}px`;
+  clearZone.style.height = `${diameter}px`;
+  clearZone.style.left   = `${cx - clearRadius}px`;
+  clearZone.style.top    = `${cy - clearRadius}px`;
+
+  // Sync the message bubble’s scale & opacity to the ripple
+  const t = maxClearRadius ? (clearRadius / maxClearRadius) : 0;
+  messageContainer.style.transform = `scale(${t})`;
+  messageContainer.style.opacity   = t;
+
+  // Position message container via JS-only centering
+  const mw = messageContainer.offsetWidth;
+  const mh = messageContainer.offsetHeight;
+  messageContainer.style.left = `${cx - mw / 2}px`;
+  messageContainer.style.top  = `${cy - mh / 2}px`;
 
   // ---- Cursor repulsion ----
   for (const l of letters) {

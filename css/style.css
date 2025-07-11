@@ -36,38 +36,37 @@ html, body {
   /* no border or background */
 }
 
-/* Unified Message pop-up styling */
+/* Message bubble (starts hidden, scales from center) */
 #message-container {
-  position: absolute;
-  top: 50%;
-  left: 50%;
-  transform: translate(-50%, -50%);
+  position: absolute;           /* JS will set left/top */
   pointer-events: none;
   z-index: 5;
   color: white;
   font-family: 'Frankfurter', sans-serif;
   font-size: 2rem;
   text-align: center;
-  line-height: 1.5em;      /* increased line spacing for quotes */
-  padding: 4rem;           /* space around text */
+  line-height: 1.5em;
+  padding: 4rem;
   box-sizing: border-box;
-  overflow: hidden;
+  overflow: visible;
+  transform-origin: center center;
+  transform: scale(0);
   opacity: 0;
-  gap: 2rem;
-  transition: opacity 2s ease-out; /* fade-in */
-  max-width: 90vw;
-  /* Allow wrapping only at spaces */
-  white-space: pre-wrap;
-  word-break: normal;
+  max-width: none;
+  white-space: normal;
+  word-break: break-all;
 }
 
+/* When JS adds `.visible`, we show & scale up */
 #message-container.visible {
-  opacity: 1;
+  transform: scale(1);
+  opacity: 1 !important;
 }
 
+/* When JS adds `.hidden`, we scale back down & hide */
 #message-container.hidden {
-  opacity: 0;
-  transition: opacity 0.5s ease-in; /* fade-out */
+  transform: scale(0);
+  opacity: 0 !important;
 }
 
 /* Ensure image-letters get a small consistent margin */
@@ -83,14 +82,10 @@ html, body {
 
 #message-container .word {
   display: inline-block;
-  /* keep letters together */
-  white-space: nowrap;
+  /* allow breaks within words */
+  white-space: normal;   
+  word-break: break-all;
   margin: 0 1rem; /* ↑ 1rem space on each side of a word */
-}
-
-#message-container .word-space {
-  display: inline-block;
-  width: 3em;   /* ↑ increased space between words */
 }
 
 /* Mobile-only adjustments for quote layout */
@@ -111,11 +106,5 @@ html, body {
   /* Optional: reduce word margin if needed */
   #message-container .word {
     margin: 0 0.5rem;
-  }
-
-  /* Also shrink ambient soup letters to match quote letters */
-  .letter {
-    width: 20px;
-    height: 20px;
   }
 }
