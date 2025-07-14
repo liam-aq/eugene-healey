@@ -41,10 +41,12 @@ html, body {
   position: absolute;           /* JS will set left/top */
   pointer-events: none;
   z-index: 5;
-  display: flex;               /* center content */
-  justify-content: center;     /* horizontal centering */
-  align-items: center;         /* vertical centering */
-  flex-wrap: wrap;             /* allow wrapping if needed */
+  /* Flex layout to center content */
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  align-content: center;   /* center flex lines instead of stretching */
+  flex-wrap: wrap;
   text-align: center;          /* ensure text lines center */
   color: white;
   font-family: 'Frankfurter', sans-serif;
@@ -109,13 +111,13 @@ html, body {
 @media (max-width: 768px) {
   /* Tighter line spacing */
   #message-container {
-    line-height: 1.1em;  /* slightly tighter on mobile */
-    padding: 2rem;       /* increased mobile padding */
+    line-height: 1.2em;  /* slightly tighter on mobile */
+    padding: 5rem;       /* increased mobile padding */
   }
 
   /* Reduce spacing between letters */
   #message-container .letter {
-    margin: 0 0.2rem;
+    margin: 0 0.5rem;
     width: 20px;
     height: 20px;
   }
