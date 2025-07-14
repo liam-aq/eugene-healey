@@ -49,8 +49,8 @@ html, body {
   color: white;
   font-family: 'Frankfurter', sans-serif;
   font-size: 2rem;
-  line-height: 1.5em;
-  padding: 4rem;
+  line-height: 1.3em;      /* reduced line height */
+  padding: 6rem;           /* increased padding */
   box-sizing: border-box;
   overflow: visible;
   transform-origin: center center;
@@ -109,8 +109,8 @@ html, body {
 @media (max-width: 768px) {
   /* Tighter line spacing */
   #message-container {
-    line-height: 1.2em;
-    padding: 1rem;   /* optional: reduce padding */
+    line-height: 1.1em;  /* slightly tighter on mobile */
+    padding: 2rem;       /* increased mobile padding */
   }
 
   /* Reduce spacing between letters */
