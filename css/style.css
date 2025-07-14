@@ -41,10 +41,14 @@ html, body {
   position: absolute;           /* JS will set left/top */
   pointer-events: none;
   z-index: 5;
+  display: flex;               /* center content */
+  justify-content: center;     /* horizontal centering */
+  align-items: center;         /* vertical centering */
+  flex-wrap: wrap;             /* allow wrapping if needed */
+  text-align: center;          /* ensure text lines center */
   color: white;
   font-family: 'Frankfurter', sans-serif;
   font-size: 2rem;
-  text-align: center;
   line-height: 1.5em;
   padding: 4rem;
   box-sizing: border-box;
@@ -69,7 +73,14 @@ html, body {
   opacity: 0 !important;
 }
 
-/* Ensure image-letters get a small consistent margin */
+/* Fade-out state: fade opacity to 0 over 500ms while holding scale */
+#message-container.fade-out {
+  transition: opacity 500ms ease-in;
+  opacity: 0 !important;
+}
+
+/* Also fade out each letter inside the message over 500ms */
+/* Base letter styling: include opacity transition so fade-out animates */
 #message-container .letter {
   /* Override absolute positioning for message letters */
   position: static !important;
@@ -78,13 +89,19 @@ html, body {
   height: 24px;
   margin: 0 0.5rem;   /* ↑ 0.5rem space on each side of a letter */
   vertical-align: middle;
+  /* Prepare for opacity transitions on fade-out */
+  transition: opacity 500ms ease-in;
+}
+
+#message-container.fade-out .letter {
+  /* Only set final opacity; transition is defined above */
+  opacity: 0 !important;
 }
 
 #message-container .word {
-  display: inline-block;
-  /* allow breaks within words */
-  white-space: normal;   
-  word-break: break-all;
+  display: inline;          /* allow mid-word breaks */
+  white-space: normal;      /* enable wrapping within words */
+  word-break: break-all;    /* break anywhere if needed */
   margin: 0 1rem; /* ↑ 1rem space on each side of a word */
 }
 

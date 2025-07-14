@@ -6,8 +6,10 @@ const BASE_NUM_LETTERS = 600;
 const NUM_LETTERS = window.innerWidth < 1024
   ? Math.floor(BASE_NUM_LETTERS / 2)  // half on narrow screens
   : BASE_NUM_LETTERS;
-const EXPAND_DUR = 2000;    // ms expand
-const CONTRACT_DUR = 1000;  // ms contract (slowed to 1s)
+const EXPAND_DUR = 3000;    // ms expand (3 s)
+const CONTRACT_DUR = 2000;  // ms contract (2 s)
+const FADE_IN_DUR = 1000;   // ms for full fade-in
+const FADE_OUT_DUR = 500;   // ms for fade-out during contract
 // Clear-zone ratio: larger on mobile for bigger blank space
 const MAX_RADIUS_RATIO = window.innerWidth < 768 
   ? 0.45   // 50% of viewport on mobile
@@ -16,7 +18,7 @@ const MAX_RADIUS_RATIO = window.innerWidth < 768
 // Smooth drift/wobble constants
 const DRIFT_AMP = 10;      // max position offset in px
 const ROT_AMP = 5;         // max rotation offset in degrees
-const DRIFT_PERIOD = 10000; // drift cycle in ms
+const DRIFT_PERIOD = 15000; // drift cycle in ms (slower drift)
 const QUOTE_DRIFT_AMP = 5;   // small positional drift for quote letters
 const QUOTE_ROT_AMP  = 10;   // increased rotational drift for quote letters
 
@@ -167,17 +169,22 @@ function initSoup() {
     triggerClear();
   });
 
-  // Start with message hidden
-  messageContainer.classList.add("hidden");
+  // No initial hidden class; CSS handles default hidden state
   animate();
 }
 
 // 3) Trigger clear ripple
 function triggerClear() {
+  // Debug: log that triggerClear ran and the click coordinates
+  console.log('triggerClear 🔔 clickX, clickY =', clickX, clickY);
   clearStart = performance.now();
-  // Lock message container to full expansion width so it doesn't re-wrap
-  const fullDiameter = maxClearRadius * 2;
-  messageContainer.style.width = `${fullDiameter}px`;
+  messageContainer.classList.remove('fade-out');
+  // Lock the message-container size to full circle diameter
+  const fullDia = maxClearRadius * 2;
+  messageContainer.style.width  = `${fullDia}px`;
+  messageContainer.style.height = `${fullDia}px`;
+  // Show the message via CSS class
+  messageContainer.classList.add('visible');
   // pick and display a new quote (if loaded)
   if (quotes.length > 0) {
     const q = quotes[Math.floor(Math.random() * quotes.length)];
@@ -193,6 +200,8 @@ function triggerClear() {
         img.src = `images/${ch.toLowerCase()}.svg`;
         img.alt = ch;
         img.className = "letter drift-letter";
+        // Start fully hidden; opacity will be driven by our staggered fade-in
+        img.style.opacity = 0;
         // assign random drift offsets (±5px) and rotation (±10deg)
         const dx = (Math.random() * 10 - 5).toFixed(2) + "px";
         const dy = (Math.random() * 10 - 5).toFixed(2) + "px";
@@ -210,10 +219,47 @@ function triggerClear() {
         messageContainer.appendChild(document.createTextNode(" "));
       }
     });
-    // show message immediately
-    messageContainer.classList.add("visible");
-    messageContainer.classList.remove("hidden");
-    messageVisible = true;
+    // Debug: log the built HTML for the message
+    console.log('after build:', messageContainer.innerHTML);
+    // Show the message container (scales up via CSS)
+    messageContainer.classList.remove('fade-out');
+    messageContainer.classList.add('visible');
+
+    // ---- Per-letter fade-in based on distance from center ----
+    const letterImgs = messageContainer.querySelectorAll('img.letter');
+    // Compute bubble center and max distance (corner)
+    const containerRect = messageContainer.getBoundingClientRect();
+    const centerX = containerRect.left + containerRect.width  / 2;
+    const centerY = containerRect.top  + containerRect.height / 2;
+    const maxDist = Math.hypot(containerRect.width / 2, containerRect.height / 2);
+    // Fade parameters
+    const fadeDur = 500;          // each letter fades over 500 ms
+    const totalWindow = 1500;     // staggered start within 1.5 s so full in by 2 s
+    letterImgs.forEach(img => {
+      // start hidden
+      img.style.opacity = '0';
+      img.style.transition = `opacity ${fadeDur}ms ease-out`;
+      // letter center
+      const r = img.getBoundingClientRect();
+      const lx = r.left + r.width  / 2;
+      const ly = r.top  + r.height / 2;
+      // normalized distance [0–1]
+      const dist = Math.hypot(lx - centerX, ly - centerY);
+      const norm = Math.min(dist / maxDist, 1);
+      // delay proportional to distance
+      const delay = norm * (totalWindow - fadeDur);
+      setTimeout(() => {
+        img.style.opacity = '1';
+      }, delay);
+    });
+
+    // ---- Schedule per-letter fade-out at contraction start ----
+    setTimeout(() => {
+      letterImgs.forEach(img => {
+        img.style.transition = 'opacity 500ms ease-in';
+        img.style.opacity = '0';
+      });
+    }, EXPAND_DUR);
   }
 }
 
@@ -249,10 +295,29 @@ function animate() {
   clearZone.style.left   = `${cx - clearRadius}px`;
   clearZone.style.top    = `${cy - clearRadius}px`;
 
-  // Sync the message bubble’s scale & opacity to the ripple
-  const t = maxClearRadius ? (clearRadius / maxClearRadius) : 0;
-  messageContainer.style.transform = `scale(${t})`;
-  messageContainer.style.opacity   = t;
+  // Removed: Match the message bubble’s size to the clear circle
+  // const msgDiameter = clearRadius * 2;
+  // messageContainer.style.width  = `${msgDiameter}px`;
+  // messageContainer.style.height = `${msgDiameter}px`;
+
+  // Once expansion completes, trigger CSS fade-out
+  if (clearStart !== null) {
+    const dt = now - clearStart;
+    if (dt >= EXPAND_DUR) {
+      // Start fade-out: keep container at full scale
+      messageContainer.classList.add('fade-out');
+      // Fade out each letter over FADE_OUT_DUR
+      messageContainer.querySelectorAll('img.letter').forEach(img => {
+        img.style.transition = `opacity ${FADE_OUT_DUR}ms ease-in`;
+        img.style.opacity = '0';
+      });
+      // After fade-out completes, hide container
+      setTimeout(() => {
+        messageContainer.classList.remove('visible', 'fade-out');
+      }, FADE_OUT_DUR);
+      clearStart = null;
+    }
+  }
 
   // Position message container via JS-only centering
   const mw = messageContainer.offsetWidth;
@@ -303,7 +368,7 @@ function animate() {
     }
 
     // Interpolate position
-    const speed = clearStart === null ? 0.05 : 0.2;
+    const speed = clearStart === null ? 0.02 : 0.1; // slower movement
     l.x = lerp(l.x, destX, speed);
     l.y = lerp(l.y, destY, speed);
 
@@ -319,13 +384,14 @@ function animate() {
       `translate(${l.x + driftX}px,${l.y + driftY}px) rotate(${l.rotation + driftRot}deg)`;
   }
 
-  // ---- Animate each quote letter with its own drift ----
+  // ---- Animate each quote letter with its own drift only ----
   messageContainer.querySelectorAll("img.letter").forEach(img => {
     const phase = ((now + img._driftOffset) % DRIFT_PERIOD) / DRIFT_PERIOD * 2 * Math.PI;
     const dx = QUOTE_DRIFT_AMP * Math.sin(phase);
     const dy = QUOTE_DRIFT_AMP * Math.cos(phase);
     const dr = QUOTE_ROT_AMP  * Math.sin(phase);
     img.style.transform = `translate(${dx}px,${dy}px) rotate(${dr}deg)`;
+    // no per-letter opacity adjustments; container handles full fade
   });
 
   requestAnimationFrame(animate);
